@@ -6,6 +6,7 @@ metadata:
     cert-manager.io/cluster-issuer: letsencrypt-issuer
     nginx.ingress.kubernetes.io/limit-connections: "2000"
     nginx.ingress.kubernetes.io/limit-rps: "2000"
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
     nginx.ingress.kubernetes.io/configuration-snippet: |
       add_header X-XSS-Protection "1; mode=block";
       add_header Strict-Transport-Security "max-age=31536000";
@@ -26,8 +27,12 @@ spec:
           - backend:
               serviceName: openlookeng-bot-internal
               servicePort: 80
-            path: /cla
+            path: /cla(/|$)(.*)
           - backend:
               serviceName: openlookeng-website-internal
               servicePort: 80
-            path: /
+            path: /(/|$)(.*)
+          - backend:
+              serviceName: website-backend-service
+              servicePort: 80
+            path: /statistics(/|$)(.*)

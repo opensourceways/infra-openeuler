@@ -4,6 +4,7 @@ resources:
   - namespace.yaml
   - service.yaml
   - cibot-service.yaml
+  - openeuler-website-backend-service.yaml
 commonLabels:
   app: openlookeng-website
 patchesJson6902:
