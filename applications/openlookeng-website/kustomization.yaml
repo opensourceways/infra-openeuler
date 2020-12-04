@@ -5,6 +5,8 @@ resources:
   - service.yaml
   - cibot-service.yaml
   - cache-ingress.yaml
+  - job.yaml
+  - secrets.yaml
 commonLabels:
   app: openlookeng-website
 patchesJson6902:

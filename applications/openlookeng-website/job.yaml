@@ -1,0 +1,33 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: website-nginx-purge
+  annotations:
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+spec:
+  ttlSecondsAfterFinished: 600
+  template:
+    spec:
+      containers:
+        - name: purge-trigger
+          image: curlimages/curl
+          env:
+            - name: USERNAME
+              valueFrom:
+                secretKeyRef:
+                  key: username
+                  name: purge-secrets
+            - name: PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: password
+                  name: purge-secrets
+          command:
+            - curl
+            - -u
+            - $(USERNAME):$(PASSWORD)
+            - --fail
+            - https://api.osinfra.cn/nginx-purger/purge?hostname=www.openlookeng.io
+      restartPolicy: Never
+  backoffLimit: 2
