@@ -27,24 +27,18 @@ spec:
           image: swr.ap-southeast-1.myhuaweicloud.com/opensourceway/sync-bot:v1.0.0
           imagePullPolicy: IfNotPresent
           name: sync-bot
-          securityContext:
-              privileged: true
           volumeMounts:
             - mountPath: /etc/secret.conf
-              name: secret-volume
+              name: sync-bot-volume
               subPath: secret
             - mountPath: /etc/token.conf
-              name: token-volume
+              name: sync-bot-volume
               subPath: token
           ports:
             - containerPort: 8765
               name: http
               protocol: TCP
       volumes:
-        - name: secrets-volume
+        - name: sync-bot-volume
           secret:
-            secretName: secret
-        - name: token-volume
-          secret:
-            secretName: token
-          name: sync-bot
+            secretName: sync-bot-secrets

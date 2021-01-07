@@ -2,8 +2,7 @@ resources:
 - namespace.yaml
 - deployment.yaml
 - service.yaml
+- secrets.yaml
 commonLabels:
   app: sync-bot
 namespace: sync-bot
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization

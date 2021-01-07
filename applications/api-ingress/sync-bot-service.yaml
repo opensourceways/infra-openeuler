@@ -1,0 +1,7 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: sync-bot-service
+spec:
+  type: ExternalName
+  externalName: sync-bot-service.sync-bot.svc.cluster.local

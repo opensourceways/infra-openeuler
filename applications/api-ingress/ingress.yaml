@@ -48,6 +48,10 @@ spec:
               serviceName: nginx-purger-service
               servicePort: 80
             path: /nginx-purger(/|$)(.*)
+          - backend:
+              serviceName: sync-bot-service
+              servicePort: 80
+            path: /sync-bot(/|$)(.*)
 ---
 apiVersion: extensions/v1beta1
 kind: Ingress
