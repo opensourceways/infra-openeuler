@@ -12,6 +12,7 @@ resources:
   - euler-icon-service.yaml
   - cve-manager-service.yaml
   - nginx-purger.yaml
+  - sync-bot-service.yaml
 commonLabels:
   app: openeuler-api
 namespace: openeuler-api
