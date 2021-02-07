@@ -1,0 +1,114 @@
+# Resource for ubuntu generic specification slave pods
+apiVersion: v1
+kind: Service
+metadata:
+  name: moderation-jenkins-slaves-service
+  namespace: jenkins
+  labels:
+    app: moderation-jenkins-slaves
+spec:
+  ports:
+    - port: 80
+      name: port-placeholder
+  clusterIP: None
+  selector:
+    app: moderation-jenkins-slaves
+
+---
+kind: StatefulSet
+apiVersion: apps/v1beta1
+metadata:
+  name: moderation-jenkins-slaves
+  namespace: jenkins
+  labels:
+    app: moderation-jenkins-slaves
+spec:
+  serviceName: moderation-jenkins-slaves-service
+  replicas: 1
+  selector:
+    matchLabels:
+      app: moderation-jenkins-slaves
+  template:
+    metadata:
+      labels:
+        app: moderation-jenkins-slaves
+    spec:
+      initContainers:
+        - name: slave-init
+          image: swr.cn-north-1.myhuaweicloud.com/mindspore/jenkins-slave-tools:0.0.1
+          volumeMounts:
+            - mountPath: /home/jenkins/share-config
+              name: jenkins-share-config
+          env:
+            - name: JENKINS_NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: JENKINS_USER_NAME
+              value: admin
+            - name: JENKINS_USER_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: osinfra-jenkins
+                  key: jenkins-slave-token
+            - name: JENKINS_AGENT_WORKDIR
+              value: /home/jenkins/agent-working-dir
+            - name: JENKINS_URL
+              value: http://jenkins.jenkins.svc.cluster.local
+            - name: JENKINS_SHARE_FOLDER
+              value: /home/jenkins/share-config
+            - name: EXECUTOR_NUMBERS
+              value: "1"
+            - name: NODE_LABELS
+              value: jenkins
+          args: ["$(JENKINS_URL)", "$(JENKINS_USER_NAME)", "$(JENKINS_USER_PASSWORD)", "$(JENKINS_NODE_NAME)", "$(EXECUTOR_NUMBERS)", "$(JENKINS_AGENT_WORKDIR)", "$(NODE_LABELS)", "$(JENKINS_SHARE_FOLDER)"]
+      containers:
+        - name: jenkins-slave
+          image: swr.ap-southeast-1.myhuaweicloud.com/opensourceway/content_moderation:0.0.1
+          imagePullPolicy: "IfNotPresent"
+          volumeMounts:
+            - mountPath: /home/jenkins/agent-working-dir
+              name: moderation-jenkins-slave-workspace-pvc
+            - mountPath: /home/jenkins/share-config
+              name: jenkins-share-config
+          command:
+            - /bin/sh
+            - -c
+            - |
+              export JENKINS_SECRET=`cat /home/jenkins/share-config/node_secret.id`;
+              exec jenkins-agent
+          resources:
+            requests:
+              cpu: 2000m
+              memory: 4000Mi
+          env:
+            - name: TZ
+              value: Asia/Shanghai
+            - name: JENKINS_TUNNEL
+              value: jenkins.jenkins.svc.cluster.local:50000
+            - name: JENKINS_AGENT_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: JENKINS_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: JENKINS_AGENT_WORKDIR
+              value: /home/jenkins/agent-working-dir
+            - name: JENKINS_URL
+              value: http://jenkins.jenkins.svc.cluster.local
+      volumes:
+        - name: jenkins-share-config
+          emptyDir: {}
+  updateStrategy:
+    type: RollingUpdate
+  volumeClaimTemplates:
+    - metadata:
+        name: moderation-jenkins-slave-workspace-pvc
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        resources:
+          requests:
+            storage: 100Gi
+        storageClassName: "csi-disk-sas"
