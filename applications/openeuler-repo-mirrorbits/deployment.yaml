@@ -29,10 +29,7 @@ spec:
             - |
               mkdir -pv /usr/local/share/GeoIP
               geoipupdate -v
-              exec /usr/bin/mirrorbits daemon --config /etc/mirrorbits.conf -debug
-          env:
-            - name: TZ
-              value: Asia/Shanghai
+              exec /usr/bin/mirrorbits daemon --config /etc/mirrorbits.conf
           livenessProbe:               #存活探针
             initialDelaySeconds: 60    #延迟加载时间
             periodSeconds: 5           #重试时间间隔
@@ -42,7 +39,7 @@ spec:
               path: /healthz
               port: 8080
         - name: rsync-server
-          image: swr.ap-southeast-1.myhuaweicloud.com/opensourceway/repo-client:474bf9a0c93f0ba0be97b593f5e2e79bbad63509
+          image: swr.ap-southeast-1.myhuaweicloud.com/opensourceway/repo-client:cf6df893333da15daf1b0ade7ef03db3a83e1b6e
           volumeMounts:
             - mountPath: /etc/rsyncd.secrets.ro
               name: mirrorbits-secrets-volume
@@ -63,8 +60,7 @@ spec:
             - name: SYNC_HOST
               value: "rsync://root@121.36.97.194/openeuler"
             - name: ADDITIONAL_PARAMETERS
-              #only sync the iso and its related files.
-              value: "-m --delete --include=*/ --include=*.iso --include=*.iso.sha256sum --exclude=*"
+              value: "--delete"
           command:
             - /bin/sh
             - -c
@@ -88,3 +84,74 @@ spec:
         - name: data-volume
           persistentVolumeClaim:
             claimName: openeuler-data-volume
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: redis
+spec:
+  replicas: 1
+  serviceName: redis
+  selector:
+    matchLabels:
+      name: redis
+  template:
+    metadata:
+      labels:
+        name: redis
+    spec:
+      initContainers:
+      - name: init-redis
+        image: busybox
+        command: ['sh', '-c', 'mkdir -p /data/redis/log/;mkdir -p /data/redis/conf/;mkdir -p /data/redis/data/']
+        volumeMounts:
+        - name: redis-data-volume
+          mountPath: /data/redis/
+      containers:
+      - name: redis
+        image: redis:rc-alpine3.12
+        imagePullPolicy: IfNotPresent
+        command:
+        - sh
+        - -c
+        - "exec redis-server /data/redis/conf/redis.conf"
+        ports:
+        - containerPort: 6379
+          name: redis
+          protocol: TCP
+        resources:
+          limits:
+            cpu: 1000m
+            memory: 1024Mi
+          requests:
+            cpu: 1000m
+            memory: 1024Mi
+        livenessProbe:
+          tcpSocket:
+            port: 6379
+          initialDelaySeconds: 300
+          timeoutSeconds: 1
+          periodSeconds: 10
+          successThreshold: 1
+          failureThreshold: 3
+        readinessProbe:
+          tcpSocket:
+            port: 6379
+          initialDelaySeconds: 5
+          timeoutSeconds: 1
+          periodSeconds: 10
+          successThreshold: 1
+          failureThreshold: 3
+        volumeMounts:
+        - name: mirrorbits-configmap-volume
+          mountPath: /data/redis/conf/redis.conf
+          subPath: redis.conf
+        - name: redis-data-volume
+          mountPath: /data/redis/
+      volumes:
+        - name: mirrorbits-configmap-volume
+          configMap:
+            name: mirrorbits-configmap
+        - name: redis-data-volume
+          persistentVolumeClaim:
+            claimName: redis-data-volume

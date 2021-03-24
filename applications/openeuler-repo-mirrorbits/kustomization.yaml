@@ -10,7 +10,3 @@ resources:
 commonLabels:
   label: mirrorbits
 namespace: repo-mirrorbits
-images:
-- name: swr.ap-southeast-1.myhuaweicloud.com/opensourceway/repo-mirrorbits
-  newName: swr.ap-southeast-1.myhuaweicloud.com/opensourceway/repo-mirrorbits
-  newTag: 54931ce78e33c27822cd4be33e63fc8299c22c5f
