@@ -11,7 +11,7 @@ metadata:
       add_header Strict-Transport-Security "max-age=31536000";
       add_header X-Frame-Options "ALLOW-FROM https://vhall.huawei.com";
       add_header X-Cache-Status $upstream_cache_status;
-      add_header Content-Security-Policy "script-src 'self' *.baidu.com ers.baidu.com 'unsafe-eval' 'unsafe-inline';object-src 'none';frame-ancestors 'https://vhall.huawei.com'";
+      add_header Content-Security-Policy "script-src 'self' *.baidu.com ers.baidu.com api.map.baidu.com 'unsafe-eval' 'unsafe-inline';object-src 'none';frame-ancestors 'https://vhall.huawei.com'";
     nginx.ingress.kubernetes.io/proxy-buffering: "on"
     nginx.ingress.kubernetes.io/server-snippet: |
       rewrite ^/zh/other/cla https://clasign.osinfra.cn/sign/Z2l0ZWUlMkZvcGVuZXVsZXI= redirect;
