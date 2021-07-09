@@ -27,6 +27,7 @@ data:
         lcrCount: 2
     requiringLabels:
       - ci-bot-cla/yes
+      - ci_successful
     commitsThreshold: 1
     squashCommitLabel: stat/need-squash
     watchProjectFiles:
